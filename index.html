@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Cultura de Corte</title>
+
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #050510;
+    overflow: hidden;
+    font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+/* ================= IFRAMES ================= */
+.iframe{
+    position: fixed;
+    top: -2.5%;
+    left: 0;
+    width: 100%;
+    height: 105%;
+    border: none;
+    opacity: 0;
+    z-index: 1;
+    transition: opacity 1.5s ease;
+}
+
+.iframe.visible{
+    opacity: 1;
+    z-index: 2;
+}
+
+/* ================= OVERLAY ================= */
+#overlay{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, #050510 0%, #0a1628 100%);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.7s ease;
+}
+
+#overlay.visible{
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* ================= TÍTULO ================= */
+#title{
+    font-size: 3.8vw;
+    font-weight: 900;
+    letter-spacing: 10px;
+    color: #00d4ff;
+    text-transform: uppercase;
+    text-align: center;
+    text-shadow: 0 0 40px rgba(0,212,255,0.4);
+}
+
+#subtitle{
+    font-size: 1.5vw;
+    letter-spacing: 5px;
+    font-weight: 600;
+    color: #a0a0ff;
+    margin-top: 15px;
+    margin-bottom: 50px;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+/* ================= IMÁGENES FIJAS ================= */
+#images{
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    align-items: center;
+}
+
+.img-card{
+    width: 200px;
+    height: 220px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 3px solid rgba(0,212,255,0.4);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.img-card img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Imagen central más destacada */
+.img-card.center{
+    width: 220px;
+    height: 240px;
+    border-color: #00d4ff;
+    box-shadow: 0 0 30px rgba(0,212,255,0.3);
+}
+
+/* ================= INDICADOR ================= */
+#indicator{
+    position: fixed;
+    bottom: 35px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 14px;
+    z-index: 11;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+#overlay.visible #indicator{
+    opacity: 1;
+}
+
+.dot{
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #333;
+    transition: background 0.3s ease;
+}
+
+.dot.active{
+    background: #00d4ff;
+}
+
+/* ================= LOADING ================= */
+#loading{
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 15;
+    display: none;
+    color: #00d4ff;
+    font-size: 1vw;
+    font-weight: 600;
+    letter-spacing: 2px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="loading">CARGANDO...</div>
+
+<div id="overlay">
+    <div id="title">CULTURA DE CORTE</div>
+    <div id="subtitle"></div>
+    <div id="images"></div>
+    <div id="indicator"></div>
+</div>
+
+<iframe id="frameA" class="iframe visible"></iframe>
+<iframe id="frameB" class="iframe"></iframe>
+
+<script>
+/* ================= DATA ================= */
+const links = [
+    "https://app.powerbi.com/view?r=eyJrIjoiMjk2Y2M3ZTktN2IyMi00MmUzLWE4MjAtMDFmYjc0OTQ5ZWIzIiwidCI6IjU0NmM0MjUzLTY3NTQtNGYwNC05OWRiLTY5MWMyMDQ2YjJlYyIsImMiOjR9",
+    "https://app.powerbi.com/view?r=eyJrIjoiMzdmYzZiNjYtMWMwNi00YjFlLWEzNDMtYmEyMDUwZDIyODhmIiwidCI6IjU0NmM0MjUzLTY3NTQtNGYwNC05OWRiLTY5MWMyMDQ2YjJlYyIsImMiOjR9",
+    "https://app.powerbi.com/view?r=eyJrIjoiZTlhNzE3NzItYTA0Zi00NmFhLTkwZDItZTdiZGYwMzQzMDMyIiwidCI6IjU0NmM0MjUzLTY3NTQtNGYwNC05OWRiLTY5MWMyMDQ2YjJlYyIsImMiOjR9",
+    "https://app.powerbi.com/view?r=eyJrIjoiMjk2Y2M3ZTktN2IyMi00MmUzLWE4MjAtMDFmYjc0OTQ5ZWIzIiwidCI6IjU0NmM0MjUzLTY3NTQtNGYwNC05OWRiLTY5MWMyMDQ2YjJlYyIsImMiOjR9",
+    "https://app.powerbi.com/view?r=eyJrIjoiZTlhNzE3NzItYTA0Zi00NmFhLTkwZDItZTdiZGYwMzQzMDMyIiwidCI6IjU0NmM0MjUzLTY3NTQtNGYwNC05OWRiLTY5MWMyMDQ2YjJlYyIsImMiOjR9"
+];
+
+const subtitles = [
+    "VISIÓN INTEGRAL DE DESEMPEÑO",
+    "ENFOQUE SEMANAL DE RESULTADOS",
+    "GESTIÓN DIARIA OPERATIVA",
+    "CONTROL DE CALIDAD Y RDL",
+    "CULTURA Y DISCIPLINA"
+];
+
+// 3 imágenes por reporte (sin rotación)
+const images = [
+    ["img/productividad.jpg", "img/calidad.jpg", "img/trabajo en equipo.jpg"],
+    ["img/trabajo en equipo.jpg", "img/obsesion por el cliente.jpg", "img/orientacion a resultados.jpg"],
+    ["img/productividad.jpg", "img/Empatia.jpg", "img/calidad.jpg"],
+    ["img/calidad.jpg", "img/orientacion a resultados.jpg", "img/Empatia.jpg"],
+    ["img/productividad.jpg", "img/trabajo en equipo.jpg", "img/obsesion por el cliente.jpg"]
+];
+
+/* ================= CONFIG ================= */
+const SWAP_INTERVAL_MS   = 20000;
+const PRELOAD_START_MS   = 14000;
+const PRELOAD_TIMEOUT_MS = 12000;
+const OVERLAY_DURATION   = 2200;
+
+/* ================= STATE ================= */
+let biIndex = 0;
+let activeFrame = "A";
+let isSwapping = false;
+let isPreloading = false;
+let nextFrameReady = false;
+let preloadTimer, swapTimer;
+
+/* ================= ELEMENTS ================= */
+const frameA = document.getElementById("frameA");
+const frameB = document.getElementById("frameB");
+const overlay = document.getElementById("overlay");
+const subtitle = document.getElementById("subtitle");
+const imagesContainer = document.getElementById("images");
+const indicator = document.getElementById("indicator");
+const loading = document.getElementById("loading");
+
+/* ================= BUILD IMAGES (FIJAS) ================= */
+function buildImages(set){
+    imagesContainer.innerHTML = "";
+    set.forEach((src, i) => {
+        const card = document.createElement("div");
+        card.className = "img-card" + (i === 1 ? " center" : "");
+        card.innerHTML = `<img src="${src}" />`;
+        imagesContainer.appendChild(card);
+    });
+}
+
+/* ================= BUILD INDICATOR ================= */
+function buildIndicator(){
+    indicator.innerHTML = "";
+    links.forEach((_, i) => {
+        const dot = document.createElement("div");
+        dot.className = "dot" + (i === biIndex ? " active" : "");
+        indicator.appendChild(dot);
+    });
+}
+
+function updateIndicator(){
+    const dots = indicator.querySelectorAll(".dot");
+    dots.forEach((dot, i) => {
+        dot.classList.toggle("active", i === biIndex);
+    });
+}
+
+/* ================= HELPERS ================= */
+function getIncomingFrame(){ return activeFrame === "A" ? frameB : frameA; }
+function getOutgoingFrame(){ return activeFrame === "A" ? frameA : frameB; }
+
+/* ================= PRELOAD ================= */
+function startPreload(){
+    if (isPreloading || isSwapping) return;
+    isPreloading = true;
+
+    const nextIndex = (biIndex + 1) % links.length;
+    const incoming = getIncomingFrame();
+    let loaded = false;
+    let timeout;
+
+    const onLoad = () => {
+        if (loaded) return;
+        loaded = true;
+        clearTimeout(timeout);
+        incoming.removeEventListener("load", onLoad);
+        nextFrameReady = true;
+        isPreloading = false;
+    };
+
+    incoming.addEventListener("load", onLoad);
+    incoming.src = links[nextIndex];
+
+    timeout = setTimeout(() => {
+        if (loaded) return;
+        loaded = true;
+        incoming.removeEventListener("load", onLoad);
+        nextFrameReady = true;
+        isPreloading = false;
+    }, PRELOAD_TIMEOUT_MS);
+}
+
+/* ================= SWAP ================= */
+function swapBI(){
+    if (isSwapping) return;
+
+    if (!nextFrameReady) {
+        loading.style.display = "block";
+        startPreload();
+        setTimeout(() => {
+            loading.style.display = "none";
+            if (nextFrameReady) executeSwap();
+            else scheduleNextCycle();
+        }, 5000);
+        return;
+    }
+
+    executeSwap();
+}
+
+function executeSwap(){
+    isSwapping = true;
+    loading.style.display = "none";
+
+    const incoming = getIncomingFrame();
+    const outgoing = getOutgoingFrame();
+
+    // 1) Actualizar contenido y mostrar overlay
+    biIndex = (biIndex + 1) % links.length;
+    subtitle.textContent = subtitles[biIndex] || "";
+    buildImages(images[biIndex] || images[0]);
+    updateIndicator();
+    overlay.classList.add("visible");
+
+    // 2) Swap frames mientras overlay está visible
+    setTimeout(() => {
+        incoming.classList.add("visible");
+        outgoing.classList.remove("visible");
+        activeFrame = activeFrame === "A" ? "B" : "A";
+
+        // 3) Cerrar overlay
+        setTimeout(() => {
+            overlay.classList.remove("visible");
+            nextFrameReady = false;
+            isSwapping = false;
+            scheduleNextCycle();
+        }, 700);
+
+    }, OVERLAY_DURATION);
+}
+
+/* ================= CYCLE ================= */
+function scheduleNextCycle(){
+    clearTimeout(preloadTimer);
+    clearTimeout(swapTimer);
+    preloadTimer = setTimeout(startPreload, PRELOAD_START_MS);
+    swapTimer = setTimeout(swapBI, SWAP_INTERVAL_MS);
+}
+
+/* ================= INIT ================= */
+frameA.src = links[0];
+subtitle.textContent = subtitles[0];
+buildImages(images[0]);
+buildIndicator();
+
+frameA.addEventListener("load", () => {
+    loading.style.display = "none";
+    scheduleNextCycle();
+}, { once: true });
+
+// Refresh preventivo cada hora
+setInterval(() => {
+    if (!isSwapping) getOutgoingFrame().src = links[biIndex];
+}, 3600000);
+
+// Recovery
+window.addEventListener("error", () => {
+    isSwapping = false;
+    loading.style.display = "none";
+    overlay.classList.remove("visible");
+});
+</script>
+
+</body>
+</html>
